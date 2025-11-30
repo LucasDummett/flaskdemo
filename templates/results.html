@@ -9,9 +9,8 @@
         <h2>Please provide a more specific title.</h2>
         <p>Try one of the following:</p>
         {% for option in disambiguation %}
-            <tr>
-                <td>{{ option }}</td>
-            </tr>
+{#            Found from https://www.pythonanywhere.com/forums/topic/26830/#}
+            <li>{{ option }}</li>
         {% endfor %}
     {% elif page %}
         <h2>{{ page.title }} </h2>
