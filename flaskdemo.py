@@ -19,7 +19,7 @@ def home():
 @app.route('/about')
 def about():
     """About page route."""
-    return "I am still working on this"
+    return render_template("about.html")
 
 
 @app.route('/search', methods=['POST', 'GET'])
@@ -35,28 +35,27 @@ def search():
 def results():
     """Results page route. Render the search results."""
     search_term = session['search_term']
-    page = get_page(search_term)
-    return render_template("results.html", page=page)
+    search_results = get_page(search_term)
+    page, error_message, disambiguation_options = get_page(search_term)
+
+    return render_template("results.html", page=page, error_message=error_message,
+                           disambiguation=disambiguation_options, search_term=search_term)
 
 
 def get_page(search_term):
     """Get a Wikipedia page object based on the search term."""
     # This function is not a route
     try:
-        page = wikipedia.page(search_term)
+        page = wikipedia.page(search_term, auto_suggest=False)
+        return page, None, None
     except wikipedia.exceptions.PageError:
-        # No such page, so return a random one
-        page = wikipedia.page(wikipedia.random())
-    except wikipedia.exceptions.DisambiguationError:
-        # This is a disambiguation page; get the first real page (close enough)
-        page_titles = wikipedia.search(search_term)
-        # Sometimes the next page has the same name (different caps), so don't try the same again
-        if page_titles[1].lower() == page_titles[0].lower():
-            title = page_titles[2]
-        else:
-            title = page_titles[1]
-        page = get_page(wikipedia.page(title))
-    return page
+        # No such page, so return search error message
+        error_message = f'Page id "{search_term}" does not match any pages. Try another id!'
+        return None, error_message, None
+
+    except wikipedia.exceptions.DisambiguationError as e:
+        # This is a disambiguation page; return a list of possible pages
+        return None, None, e.options
 
 
 if __name__ == '__main__':
